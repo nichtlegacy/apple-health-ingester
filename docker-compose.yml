@@ -1,6 +1,8 @@
 services:
   ingester:
-    build: .
+    image: ghcr.io/nichtlegacy/apple-health-ingester:latest
+    # Or build locally:
+    # build: .
     container_name: apple-health-ingester
     restart: unless-stopped
     ports:

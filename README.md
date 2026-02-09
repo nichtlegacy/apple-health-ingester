@@ -64,6 +64,19 @@ flowchart LR
 **Option 1: Docker (Recommended)**
 
 ```bash
+# Using pre-built image
+docker run -d \
+  --name apple-health-ingester \
+  -p 8080:8080 \
+  -e INFLUXDB_URL=http://your-influxdb:8086 \
+  -e INFLUXDB_TOKEN=your_token \
+  -e INFLUXDB_ORG=your_org \
+  ghcr.io/nichtlegacy/apple-health-ingester:latest
+```
+
+Or build locally:
+
+```bash
 # Clone the repository
 git clone https://github.com/nichtlegacy/apple-health-ingester.git
 cd apple-health-ingester

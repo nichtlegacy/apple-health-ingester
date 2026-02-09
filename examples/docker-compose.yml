@@ -1,10 +1,15 @@
-# Example docker-compose configuration for Apple Health Ingester
-# Copy this file to the project root and rename to docker-compose.yml
-# Then create a .env file with your configuration
+# Full stack example: Apple Health Ingester + InfluxDB
+#
+# Usage:
+#   1. Copy this file and create a .env file with:
+#      INFLUXDB_TOKEN=your_secure_token_here
+#      INFLUXDB_PASSWORD=your_admin_password
+#   2. Run: docker-compose up -d
+#   3. Access InfluxDB at http://localhost:8086
 
 services:
   ingester:
-    build: ..
+    image: ghcr.io/nichtlegacy/apple-health-ingester:latest
     container_name: apple-health-ingester
     restart: unless-stopped
     ports:
@@ -12,12 +17,13 @@ services:
     environment:
       - INFLUXDB_URL=http://influxdb:8086
       - INFLUXDB_TOKEN=${INFLUXDB_TOKEN}
-      - INFLUXDB_ORG=my-org
-      - INFLUXDB_BUCKET=applehealth
+      - INFLUXDB_ORG=${INFLUXDB_ORG:-my-org}
+      - INFLUXDB_BUCKET=${INFLUXDB_BUCKET:-applehealth}
       - API_KEY=${API_KEY:-}
-      - LOG_LEVEL=INFO
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
     depends_on:
-      - influxdb
+      influxdb:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080/health')"]
       interval: 30s
@@ -34,12 +40,17 @@ services:
       - DOCKER_INFLUXDB_INIT_MODE=setup
       - DOCKER_INFLUXDB_INIT_USERNAME=admin
       - DOCKER_INFLUXDB_INIT_PASSWORD=${INFLUXDB_PASSWORD:-changeme}
-      - DOCKER_INFLUXDB_INIT_ORG=my-org
-      - DOCKER_INFLUXDB_INIT_BUCKET=applehealth
+      - DOCKER_INFLUXDB_INIT_ORG=${INFLUXDB_ORG:-my-org}
+      - DOCKER_INFLUXDB_INIT_BUCKET=${INFLUXDB_BUCKET:-applehealth}
       - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=${INFLUXDB_TOKEN}
     volumes:
       - influxdb-data:/var/lib/influxdb2
       - influxdb-config:/etc/influxdb2
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8086/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
 volumes:
   influxdb-data:
